@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Academic Structure | AI Academic Advisor{% endblock %}
+
+{% block header_title %}Academic Structure{% endblock %}
+{% block header_subtitle %}Overview of programmes and course offerings.{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">Course Offerings Map</div>
+    <div class="card-body" style="padding: 0;">
+        {% if offerings %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Semester</th>
+                    <th>Programme</th>
+                    <th>Batch</th>
+                    <th>Course</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for offering in offerings %}
+                <tr>
+                    <td style="font-weight: 600;">{{ offering.semester }}</td>
+                    <td>{{ offering.programme }}</td>
+                    <td>{{ offering.batch_context|default:"Any" }}</td>
+                    <td><a href="{% url 'course_detail' course_code=offering.course.course_code %}{% if request.GET.student_id %}?student_id={{ request.GET.student_id }}{% endif %}" style="color: var(--color-accent); text-decoration: none; font-weight: 500;">{{ offering.course.course_code }} - {{ offering.course.title }}</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="padding: var(--space-8); text-align: center; color: var(--color-text-muted);">
+            No course offerings found in the database.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

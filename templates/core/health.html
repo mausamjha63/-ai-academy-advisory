@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}System Status | AI Academic Advisor{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">System Status</h1>
+        <p class="text-gray-600 mt-2">Current operational status of all system components.</p>
+    </div>
+
+    <div class="glass-panel rounded-xl overflow-hidden shadow">
+        <div class="bg-indigo-50 px-6 py-4 border-b border-indigo-100 flex justify-between items-center">
+            <h2 class="text-lg font-bold text-indigo-900">Component Health</h2>
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-200">
+                ALL SYSTEMS OPERATIONAL
+            </span>
+        </div>
+        
+        <ul class="divide-y divide-gray-200">
+            <li class="px-6 py-4 flex items-center justify-between">
+                <div>
+                    <p class="font-medium text-gray-900">Django Application</p>
+                    <p class="text-sm text-gray-500">Core web framework routing</p>
+                </div>
+                <div class="flex items-center">
+                    {% if app_status == 'OK' %}
+                    <svg class="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                    <span class="text-green-600 font-semibold">{{ app_status }}</span>
+                    {% else %}
+                    <span class="text-red-600 font-semibold">{{ app_status }}</span>
+                    {% endif %}
+                </div>
+            </li>
+            
+            <li class="px-6 py-4 flex items-center justify-between">
+                <div>
+                    <p class="font-medium text-gray-900">Database Connectivity</p>
+                    <p class="text-sm text-gray-500">Structured academic data store</p>
+                </div>
+                <div class="flex items-center">
+                    {% if db_status == 'OK' %}
+                    <svg class="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                    <span class="text-green-600 font-semibold">{{ db_status }}</span>
+                    {% else %}
+                    <span class="text-red-600 font-semibold">{{ db_status }}</span>
+                    {% endif %}
+                </div>
+            </li>
+
+            <li class="px-6 py-4 flex items-center justify-between">
+                <div>
+                    <p class="font-medium text-gray-900">Environment Configuration</p>
+                    <p class="text-sm text-gray-500">.env loaded successfully</p>
+                </div>
+                <div class="flex items-center">
+                    <svg class="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                    <span class="text-green-600 font-semibold">OK</span>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

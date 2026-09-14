@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}System Status | AI Academic Advisor{% endblock %}
+
+{% block header_title %}System Status{% endblock %}
+{% block header_subtitle %}Overview of platform services and health.{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">Service Health Overview</div>
+    <div class="card-body">
+        <div class="grid-cols-2">
+            <!-- App Server Status -->
+            <div style="background: var(--color-bg); padding: var(--space-6); border-radius: var(--radius-md); border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: var(--space-4);">
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background: #e0e7ff; color: #4338ca; display: flex; align-items: center; justify-content: center;">
+                        <svg style="width: 24px; height: 24px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg>
+                    </div>
+                    <div>
+                        <h3 style="font-weight: 600; font-size: 1.1rem; color: var(--color-text-main);">Application Server</h3>
+                        <p style="font-size: 0.875rem; color: var(--color-text-muted);">Django Core Framework</p>
+                    </div>
+                </div>
+                <span class="badge badge-success" style="display: flex; align-items: center; gap: var(--space-2); font-size: 0.875rem; padding: var(--space-2) var(--space-4);">
+                    <span style="display: block; width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+                    {{ app_status|default:"OK" }}
+                </span>
+            </div>
+
+            <!-- Database Status -->
+            <div style="background: var(--color-bg); padding: var(--space-6); border-radius: var(--radius-md); border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: var(--space-4);">
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background: #e0e7ff; color: #4338ca; display: flex; align-items: center; justify-content: center;">
+                        <svg style="width: 24px; height: 24px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+                    </div>
+                    <div>
+                        <h3 style="font-weight: 600; font-size: 1.1rem; color: var(--color-text-main);">Database Connection</h3>
+                        <p style="font-size: 0.875rem; color: var(--color-text-muted);">SQLite Knowledge Base</p>
+                    </div>
+                </div>
+                {% if "OK" in db_status %}
+                <span class="badge badge-success" style="display: flex; align-items: center; gap: var(--space-2); font-size: 0.875rem; padding: var(--space-2) var(--space-4);">
+                    <span style="display: block; width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+                    {{ db_status }}
+                </span>
+                {% else %}
+                <span class="badge badge-danger" style="display: flex; align-items: center; gap: var(--space-2); font-size: 0.875rem; padding: var(--space-2) var(--space-4);">
+                    <span style="display: block; width: 8px; height: 8px; border-radius: 50%; background: #ef4444;"></span>
+                    ERROR
+                </span>
+                {% endif %}
+            </div>
+
+            <!-- Gemini API Status -->
+            <div style="background: var(--color-bg); padding: var(--space-6); border-radius: var(--radius-md); border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: space-between; grid-column: span 2;">
+                <div style="display: flex; align-items: center; gap: var(--space-4);">
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background: #e0e7ff; color: #4338ca; display: flex; align-items: center; justify-content: center;">
+                        <svg style="width: 24px; height: 24px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 style="font-weight: 600; font-size: 1.1rem; color: var(--color-text-main);">Gemini AI Service</h3>
+                        <p style="font-size: 0.875rem; color: var(--color-text-muted);">External LLM Integration</p>
+                    </div>
+                </div>
+                {% if "Active" in gemini_status %}
+                <span class="badge badge-success" style="display: flex; align-items: center; gap: var(--space-2); font-size: 0.875rem; padding: var(--space-2) var(--space-4);">
+                    <span style="display: block; width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+                    {{ gemini_status }}
+                </span>
+                {% else %}
+                <span class="badge badge-warning" style="display: flex; align-items: center; gap: var(--space-2); font-size: 0.875rem; padding: var(--space-2) var(--space-4);">
+                    <span style="display: block; width: 8px; height: 8px; border-radius: 50%; background: #f59e0b;"></span>
+                    {{ gemini_status }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

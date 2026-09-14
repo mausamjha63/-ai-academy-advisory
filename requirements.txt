@@ -1,0 +1,7 @@
+Django>=4.2,<5.0
+python-dotenv==1.0.1
+pandas>=2.0.0
+openpyxl>=3.1.2
+pypdf>=4.0.0
+google-genai>=0.2.0
+chromadb>=0.4.0

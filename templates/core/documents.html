@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Documents & Sources | AI Academic Advisor{% endblock %}
+
+{% block header_title %}Documents & Sources{% endblock %}
+{% block header_subtitle %}Authoritative institutional texts and rules.{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">Indexed Institutional Documents</div>
+    <div class="card-body" style="padding: 0;">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Document Title</th>
+                    <th>Status</th>
+                    <th>Date Indexed</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="font-weight: 600;">Student Handbook (2025-26)</td>
+                    <td><span class="badge badge-success">Indexed</span></td>
+                    <td>Sept 2026</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: 600;">Academic SOPs</td>
+                    <td><span class="badge badge-success">Indexed</span></td>
+                    <td>Sept 2026</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: 600;">Semester Timetable (Dummy)</td>
+                    <td><span class="badge badge-warning">Pending</span></td>
+                    <td>-</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Administration | AI Academic Advisor{% endblock %}
+
+{% block header_title %}System Administration{% endblock %}
+{% block header_subtitle %}Database and AI Service Management.{% endblock %}
+
+{% block content %}
+<div class="grid-cols-2">
+    <div class="card">
+        <div class="card-header">Database Statistics</div>
+        <div class="card-body">
+            <ul style="list-style: none; display: flex; flex-direction: column; gap: var(--space-4);">
+                <li style="display: flex; justify-content: space-between; padding-bottom: var(--space-2); border-bottom: 1px solid var(--color-border);">
+                    <span style="font-weight: 500; color: var(--color-text-muted);">Total Courses</span>
+                    <span style="font-weight: 700; color: var(--color-text-main);">{{ stats.courses }}</span>
+                </li>
+                <li style="display: flex; justify-content: space-between; padding-bottom: var(--space-2); border-bottom: 1px solid var(--color-border);">
+                    <span style="font-weight: 500; color: var(--color-text-muted);">Total Offerings</span>
+                    <span style="font-weight: 700; color: var(--color-text-main);">{{ stats.offerings }}</span>
+                </li>
+                <li style="display: flex; justify-content: space-between; padding-bottom: var(--space-2); border-bottom: 1px solid var(--color-border);">
+                    <span style="font-weight: 500; color: var(--color-text-muted);">Prerequisite Rules</span>
+                    <span style="font-weight: 700; color: var(--color-text-main);">{{ stats.prereqs }}</span>
+                </li>
+                <li style="display: flex; justify-content: space-between;">
+                    <span style="font-weight: 500; color: var(--color-text-muted);">Synthetic Students</span>
+                    <span style="font-weight: 700; color: var(--color-text-main);">{{ stats.students }}</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Service Controls</div>
+        <div class="card-body">
+            <div style="margin-bottom: var(--space-6);">
+                <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: var(--space-2);">Gemini API</h4>
+                {% if "Active" in gemini_status %}
+                    <span class="badge badge-success">{{ gemini_status }}</span>
+                {% else %}
+                    <span class="badge badge-warning">{{ gemini_status }}</span>
+                {% endif %}
+            </div>
+            
+            <div>
+                <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: var(--space-2);">Database Health</h4>
+                {% if "OK" in db_status %}
+                    <span class="badge badge-success">{{ db_status }}</span>
+                {% else %}
+                    <span class="badge badge-danger">ERROR</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

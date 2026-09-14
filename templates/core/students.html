@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Students | AI Academic Advisor{% endblock %}
+
+{% block header_title %}Synthetic Students{% endblock %}
+{% block header_subtitle %}Demo profiles for testing academic advising scenarios.{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">Student Directory</div>
+    <div class="card-body" style="padding: 0;">
+        {% if synthetic_students %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Programme</th>
+                    <th>Batch</th>
+                    <th>CGPA</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in synthetic_students %}
+                <tr {% if active_student.student_id == student.student_id %}style="background-color: var(--color-primary-light); color: white;"{% endif %}>
+                    <td style="font-weight: 600;">{{ student.student_id }}</td>
+                    <td>Demo Student {{ student.student_id }}</td>
+                    <td>{{ student.programme }}</td>
+                    <td>{{ student.current_semester }}</td>
+                    <td style="font-weight: 600;">{{ student.cgpa|default:"-" }}</td>
+                    <td>
+                        {% if active_student.student_id == student.student_id %}
+                            <span class="badge" style="background: white; color: var(--color-primary);">Active Context</span>
+                        {% else %}
+                            <a href="?student_id={{ student.student_id }}" class="btn btn-outline" style="padding: var(--space-1) var(--space-3); font-size: 0.75rem;">Select</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="padding: var(--space-8); text-align: center; color: var(--color-text-muted);">
+            No synthetic students found in the database.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

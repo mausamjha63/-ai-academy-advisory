@@ -1,0 +1,65 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up | AI Academic Advisor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/landing.css' %}">
+</head>
+<body>
+    <div class="auth-layout">
+        <div class="auth-overlay"></div>
+        
+        <nav class="auth-nav">
+            <div class="nav-brand-text" style="color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
+                <span class="nav-brand-title" style="color: white;">AI Academic Advisor</span>
+                <span class="nav-brand-subtitle">VIDYASHILP UNIVERSITY</span>
+            </div>
+            <a href="{% url 'landing' %}" class="auth-back">Back to Home</a>
+        </nav>
+
+        <div class="auth-card">
+            <h2>Create Account</h2>
+            <p class="auth-subtitle">Join the AI Academic Advisor platform.</p>
+            
+            <form id="dummySignUpForm">
+                <div class="auth-form-group">
+                    <label for="fullname">Full Name</label>
+                    <input type="text" id="fullname" required placeholder="John Doe">
+                </div>
+                <div class="auth-form-group">
+                    <label for="email">Email</label>
+                    <input type="text" id="email" required placeholder="name@domain.com">
+                </div>
+                <div class="auth-form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required placeholder="••••••••">
+                </div>
+                <div class="auth-form-group">
+                    <label for="confirm_password">Confirm Password</label>
+                    <input type="password" id="confirm_password" required placeholder="••••••••">
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem; border-radius: var(--radius-md);">Create Account</button>
+            </form>
+            
+            <div class="auth-disclaimer">
+                Demo experience — no account is actually created or saved.
+            </div>
+            
+            <div class="auth-switch">
+                Already have an account? <a href="{% url 'signin' %}">Sign In</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('dummySignUpForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            window.location.href = "{% url 'dashboard' %}";
+        });
+    </script>
+</body>
+</html>
