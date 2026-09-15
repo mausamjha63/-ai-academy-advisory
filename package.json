@@ -1,0 +1,7 @@
+{
+  "name": "ai-academic-advisor",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "python manage.py collectstatic --noinput"
+  }
+}
