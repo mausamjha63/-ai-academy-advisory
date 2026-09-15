@@ -411,12 +411,48 @@ class OfflineQAService:
         return None
 
     @classmethod
+    def adapt_language(cls, text: str, query: str) -> str:
+        clean_q = query.lower()
+        hindi_keywords = [
+            "kya", "hai", "kaun", "kitne", "kitni", "kitna", "chahiye", "kar sakta", 
+            "sakta", "sakti", "le sakta", "liya", "ho", "mera", "meri", "mere", "batao",
+            "batai", "samjhao", "rules kya", "bhi", "thi", "tha", "ko", "se", "par",
+            "jaaye", "raha", "rahi", "kaise", "kab", "kahan", "kyun", "karo", "do"
+        ]
+        has_hindi_script = any('\u0900' <= char <= '\u097f' for char in query)
+        has_hinglish_kw = any(re.search(rf'\b{kw}\b', clean_q) for kw in hindi_keywords)
+        
+        if not (has_hindi_script or has_hinglish_kw):
+            return text
+            
+        replacements = [
+            ("The prerequisite for", "Prerequisite requirement hai"),
+            ("is required for graduation", "graduation ke liye zaroori hai"),
+            ("minimum passing grade of", "minimum passing grade"),
+            ("Students must complete", "Students ko pehle complete karna hoga"),
+            ("Eligibility depends on your completed courses:", "Eligibility aapke completed courses par depend karti hai:"),
+            ("you are eligible to enroll in", "aap enroll karne ke liye eligible hain"),
+            ("has completed", "ne complete kar liya hai"),
+            ("which satisfies the prerequisite requirement.", "jo prerequisite requirement ko pura karta hai."),
+            ("According to Section 4.2 of the Academic Attendance Policy:", "Academic Attendance Policy Section 4.2 ke anusaar:"),
+            ("Students must maintain a minimum of 75% attendance", "Students ki minimum 75% attendance hona zaroori hai"),
+            ("to be eligible to sit for final examinations.", "final exams mein baithne ke liye."),
+            ("Students falling below 75% attendance will receive an Attendance Debarment grade", "75% se kam attendance hone par Attendance Debarment (F-Att) grade milega.")
+        ]
+        
+        adapted = text
+        for old, new in replacements:
+            adapted = adapted.replace(old, new)
+        return adapted
+
+    @classmethod
     def get_fallback_response(cls, query: str, evidence=None):
         preset = cls.match_preset_question(query)
         if preset:
+            answer_text = cls.adapt_language(preset["answer"], query)
             return {
                 "state": preset["state"],
-                "answer": preset["answer"],
+                "answer": answer_text,
                 "evidence": preset["evidence"],
                 "reason": "Answered via verified university offline Q&A database.",
                 "missing_information": [],
@@ -427,18 +463,21 @@ class OfflineQAService:
         combined_evidence = evidence or []
         if combined_evidence:
             evidence_snippets = "\n".join([f"- {ev.get('content', '')}" for ev in combined_evidence[:3]])
+            answer_text = f"Based on the verified university records for your query:\n\n{evidence_snippets}\n\n*(Note: Displaying verified database record while AI service is operating in offline/fallback mode)*"
+            answer_text = cls.adapt_language(answer_text, query)
             return {
                 "state": "ANSWERED",
-                "answer": f"Based on the verified university records for your query:\n\n{evidence_snippets}\n\n*(Note: Displaying verified database record while AI service is operating in offline/fallback mode)*",
+                "answer": answer_text,
                 "evidence": combined_evidence,
                 "reason": "Generated using verified offline dataset evidence.",
                 "missing_information": [],
                 "conflict_information": False
             }
             
+        default_ans = cls.adapt_language("I have received your query regarding university academic regulations. In offline mode, please check our 25 preset sample questions or verify your API key.", query)
         return {
             "state": "ANSWERED",
-            "answer": "I have received your query regarding university academic regulations. In offline mode, please check our 25 preset sample questions or verify your API key.",
+            "answer": default_ans,
             "evidence": [],
             "reason": "Offline fallback response.",
             "missing_information": [],
