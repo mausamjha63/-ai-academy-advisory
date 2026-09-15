@@ -46,7 +46,13 @@
                     <svg style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path></svg>
                     <strong id="sessionTitleDisplay">{{ active_session.title }}</strong>
                 </div>
-                <span style="font-size: 0.75rem; color: var(--color-text-muted);">Session ID: {{ active_session.id|stringformat:".8s" }}</span>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <label style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: var(--color-text-muted); cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="autoVoiceToggle" style="accent-color: var(--color-primary);">
+                        <span>Auto-Read Voice</span>
+                    </label>
+                    <span style="font-size: 0.75rem; color: var(--color-text-muted);">Session ID: {{ active_session.id|stringformat:".8s" }}</span>
+                </div>
             </div>
             
             <div id="chatHistory" class="chat-messages">
@@ -65,22 +71,29 @@
                         </div>
                     {% else %}
                         <div class="message msg-bot" data-evidence='{{ msg.evidence|json_script:"ev" }}'>
-                            {% if msg.state %}
-                                <span class="state-badge 
-                                    {% if msg.state == 'ELIGIBLE' %}badge-success
-                                    {% elif msg.state == 'NOT_ELIGIBLE' %}badge-danger
-                                    {% elif msg.state == 'NEEDS_MORE_INFORMATION' or msg.state == 'CONFLICTING_INFORMATION' %}badge-warning
-                                    {% else %}badge-neutral{% endif %}"
-                                    style="{% if msg.state == 'ELIGIBLE' %}background: #d1fae5; color: #065f46; border-color: #34d399;
-                                           {% elif msg.state == 'NOT_ELIGIBLE' %}background: #fee2e2; color: #991b1b; border-color: #f87171;
-                                           {% elif msg.state == 'NEEDS_MORE_INFORMATION' %}background: #fef3c7; color: #92400e; border-color: #fbbf24;
-                                           {% elif msg.state == 'CONFLICTING_INFORMATION' %}background: #ffedd5; color: #9a3412; border-color: #fdba74;
-                                           {% else %}background: #f1f5f9; color: #334155; border-color: #cbd5e1;{% endif %}">
-                                    {{ msg.state }}
-                                </span>
-                            {% endif %}
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                {% if msg.state %}
+                                    <span class="state-badge 
+                                        {% if msg.state == 'ELIGIBLE' %}badge-success
+                                        {% elif msg.state == 'NOT_ELIGIBLE' %}badge-danger
+                                        {% elif msg.state == 'NEEDS_MORE_INFORMATION' or msg.state == 'CONFLICTING_INFORMATION' %}badge-warning
+                                        {% else %}badge-neutral{% endif %}"
+                                        style="{% if msg.state == 'ELIGIBLE' %}background: #d1fae5; color: #065f46; border-color: #34d399;
+                                               {% elif msg.state == 'NOT_ELIGIBLE' %}background: #fee2e2; color: #991b1b; border-color: #f87171;
+                                               {% elif msg.state == 'NEEDS_MORE_INFORMATION' %}background: #fef3c7; color: #92400e; border-color: #fbbf24;
+                                               {% elif msg.state == 'CONFLICTING_INFORMATION' %}background: #ffedd5; color: #9a3412; border-color: #fdba74;
+                                               {% else %}background: #f1f5f9; color: #334155; border-color: #cbd5e1;{% endif %}">
+                                        {{ msg.state }}
+                                    </span>
+                                {% else %}
+                                    <span></span>
+                                {% endif %}
+                                <button type="button" class="btn-tts" onclick="speakText(this)" title="Read out loud (Voice Response)" style="background: none; border: none; cursor: pointer; color: var(--color-text-muted); padding: 4px; border-radius: 4px; transition: all 0.2s;">
+                                    <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+                                </button>
+                            </div>
                             
-                            <div style="margin-top: 0.5rem; line-height: 1.5; font-size: 0.95rem; white-space: pre-wrap;">{{ msg.content }}</div>
+                            <div class="msg-content-text" style="margin-top: 0.5rem; line-height: 1.5; font-size: 0.95rem; white-space: pre-wrap;">{{ msg.content }}</div>
 
                             {% if msg.reason %}
                                 <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--color-border);">
@@ -112,15 +125,24 @@
             </div>
             
             <div style="padding: var(--space-4); border-top: 1px solid var(--color-border); background: var(--color-surface);">
-                <form id="chatForm" class="chat-input-area">
+                <form id="chatForm" class="chat-input-area" style="display: flex; gap: 0.5rem; align-items: center;">
                     {% csrf_token %}
                     <input type="hidden" id="active_session_id" name="session_id" value="{{ active_session.id }}">
-                    <input type="text" id="queryInput" placeholder="Ask an academic question..." required>
-                    <button type="submit" id="sendBtn" class="btn btn-primary" style="min-width: 100px;">
+                    <input type="text" id="queryInput" placeholder="Ask a question or click mic to speak..." required style="flex-grow: 1;">
+                    
+                    <button type="button" id="micBtn" onclick="toggleVoiceInput()" class="btn btn-secondary" title="Click to speak (Multilingual Voice Search)" style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border-radius: 50%; flex-shrink: 0; transition: all 0.2s;">
+                        <svg id="micIcon" style="width: 20px; height: 20px;" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                    </button>
+
+                    <button type="submit" id="sendBtn" class="btn btn-primary" style="min-width: 90px; height: 44px; display: inline-flex; align-items: center; justify-content: center;">
                         <span id="sendText">Send</span>
                         <svg id="loadingSpinner" style="width: 20px; height: 20px; display: none; animation: spin 1s linear infinite;" fill="none" viewBox="0 0 24 24"><circle style="opacity: 0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path style="opacity: 0.75;" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                     </button>
                 </form>
+                
+                <div id="voiceStatus" style="display: none; font-size: 0.8rem; color: #ef4444; font-weight: 600; margin-top: 0.5rem; align-items: center; gap: 0.4rem;">
+                    <span class="mic-pulse-dot"></span> <span id="voiceStatusText">Listening... Speak in Hindi, English or any language</span>
+                </div>
             </div>
         </div>
         
@@ -189,6 +211,33 @@
 }
 .state-badge {
     padding: 0.15rem 0.5rem; border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; border: 1px solid;
+}
+/* Voice Input & Output Styles */
+#micBtn.listening {
+    background: #ef4444 !important;
+    color: white !important;
+    border-color: #ef4444 !important;
+    animation: micPulse 1.2s infinite;
+}
+@keyframes micPulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { transform: scale(1.08); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+.mic-pulse-dot {
+    width: 8px; height: 8px; background: #ef4444; border-radius: 50%; display: inline-block; animation: pulseDot 1s infinite;
+}
+@keyframes pulseDot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+.btn-tts:hover {
+    color: var(--color-primary) !important;
+    background: rgba(0,0,0,0.05) !important;
+}
+.btn-tts.speaking {
+    color: #2563eb !important;
+    animation: pulseDot 1s infinite;
 }
 </style>
 {% endblock %}
@@ -307,7 +356,7 @@
             stateIndicator.className = badgeClass;
             
             // Build the response content HTML
-            let contentHtml = `<div style="margin-top: 0.5rem; line-height: 1.5; font-size: 0.95rem; white-space: pre-wrap;">${data.answer}</div>`;
+            let contentHtml = `<div class="msg-content-text" style="margin-top: 0.5rem; line-height: 1.5; font-size: 0.95rem; white-space: pre-wrap;">${data.answer}</div>`;
             
             if (data.reason) {
                 contentHtml += `
@@ -334,16 +383,29 @@
             }
             
             // Render Answer Message
-            chatHistory.innerHTML += `
-                <div class="message msg-bot">
+            const newMsgElem = document.createElement('div');
+            newMsgElem.className = 'message msg-bot';
+            newMsgElem.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span class="state-badge" style="${stateStyle}">${data.state}</span>
-                    ${contentHtml}
+                    <button type="button" class="btn-tts" onclick="speakText(this)" title="Read out loud (Voice Response)" style="background: none; border: none; cursor: pointer; color: var(--color-text-muted); padding: 4px; border-radius: 4px; transition: all 0.2s;">
+                        <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+                    </button>
                 </div>
+                ${contentHtml}
             `;
+            chatHistory.appendChild(newMsgElem);
             chatHistory.scrollTop = chatHistory.scrollHeight;
             
             // Render Evidence Panel
             renderEvidence(data.evidence);
+            
+            // Auto Read Aloud if toggle is checked
+            const autoVoiceToggle = document.getElementById('autoVoiceToggle');
+            if (autoVoiceToggle && autoVoiceToggle.checked) {
+                const ttsBtn = newMsgElem.querySelector('.btn-tts');
+                speakText(ttsBtn, data.answer);
+            }
             
         } catch (error) {
             console.error(error);
@@ -361,7 +423,134 @@
             spinner.style.display = 'none';
         }
     });
-    
+
+    // -------------------------------------------------------------
+    // Multilingual Voice Input (Speech-to-Text)
+    // -------------------------------------------------------------
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    let isListening = false;
+
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = navigator.language || 'hi-IN'; // Default to user language or Hindi/English
+
+        recognition.onstart = function() {
+            isListening = true;
+            document.getElementById('micBtn').classList.add('listening');
+            document.getElementById('voiceStatus').style.display = 'flex';
+            document.getElementById('voiceStatusText').textContent = "Listening... Speak in Hindi, English or any language";
+        };
+
+        recognition.onresult = function(event) {
+            let transcript = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                transcript += event.results[i][0].transcript;
+            }
+            document.getElementById('queryInput').value = transcript;
+        };
+
+        recognition.onerror = function(event) {
+            console.warn("Speech recognition error:", event.error);
+            stopListening();
+        };
+
+        recognition.onend = function() {
+            stopListening();
+        };
+    } else {
+        const micBtn = document.getElementById('micBtn');
+        if (micBtn) {
+            micBtn.style.opacity = '0.5';
+            micBtn.title = 'Speech Recognition is not supported in this browser.';
+        }
+    }
+
+    function toggleVoiceInput() {
+        if (!recognition) {
+            alert("Speech Recognition is not supported in this browser. Please use Google Chrome, Microsoft Edge, or Safari.");
+            return;
+        }
+        if (isListening) {
+            recognition.stop();
+            stopListening();
+        } else {
+            try {
+                recognition.start();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    }
+
+    function stopListening() {
+        isListening = false;
+        const micBtn = document.getElementById('micBtn');
+        if (micBtn) micBtn.classList.remove('listening');
+        const voiceStatus = document.getElementById('voiceStatus');
+        if (voiceStatus) voiceStatus.style.display = 'none';
+    }
+
+    // -------------------------------------------------------------
+    // Multilingual Voice Output (Text-to-Speech)
+    // -------------------------------------------------------------
+    function speakText(btnElement, customText) {
+        if (!('speechSynthesis' in window)) {
+            alert("Text-to-Speech is not supported in this browser.");
+            return;
+        }
+
+        if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+            if (btnElement && btnElement.classList.contains('speaking')) {
+                btnElement.classList.remove('speaking');
+                return;
+            }
+        }
+
+        document.querySelectorAll('.btn-tts').forEach(b => b.classList.remove('speaking'));
+
+        let textToSpeak = customText;
+        if (!textToSpeak && btnElement) {
+            const msgBubble = btnElement.closest('.msg-bot');
+            if (msgBubble) {
+                const textElem = msgBubble.querySelector('.msg-content-text');
+                textToSpeak = textElem ? textElem.innerText : msgBubble.innerText;
+            }
+        }
+
+        if (!textToSpeak) return;
+
+        // Clean markdown symbols for smooth audio reading
+        const cleanText = textToSpeak.replace(/[*#`_\-]/g, '').trim();
+
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+
+        // Multilingual Detection: Hindi Unicode block \u0900-\u097F
+        const hasHindi = /[\u0900-\u097F]/.test(cleanText);
+        if (hasHindi) {
+            utterance.lang = 'hi-IN';
+        } else {
+            utterance.lang = 'en-US';
+        }
+
+        if (btnElement) {
+            btnElement.classList.add('speaking');
+            utterance.onend = function() {
+                btnElement.classList.remove('speaking');
+            };
+            utterance.onerror = function() {
+                btnElement.classList.remove('speaking');
+            };
+        }
+
+        window.speechSynthesis.speak(utterance);
+    }
+
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
