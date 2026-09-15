@@ -7,7 +7,6 @@ from django.conf import settings
 from .retrieval_service import RetrievalService
 from .academic_data_service import AcademicDataService
 from .decision_engine import DecisionEngine
-from .offline_qa_service import OfflineQAService
 from advisor.prompts import get_prompt_builder
 
 class AdvisorService:
@@ -121,16 +120,9 @@ class AdvisorService:
                 })
                 
         all_evidence = rag_evidence + structured_evidence
-        
-        # If offline preset question matches or client is missing, check preset offline Q&A
-        preset_match = OfflineQAService.match_preset_question(user_query)
-        if (not self.client or not all_evidence) and preset_match:
-            return OfflineQAService.get_fallback_response(user_query, all_evidence)
 
-        # If BOTH RAG and Structured DB return nothing, check preset or answer Information Unavailable
+        # If BOTH RAG and Structured DB return nothing, answer Information Unavailable immediately
         if not all_evidence:
-            if preset_match:
-                return OfflineQAService.get_fallback_response(user_query, all_evidence)
             return self._build_response(
                 DecisionEngine.STATES['INFORMATION_UNAVAILABLE'],
                 "I couldn't find verified information in the available university sources for that question. Please provide the course code, programme, semester, or other relevant academic detail.",
@@ -180,7 +172,7 @@ class AdvisorService:
             except:
                 pass
 
-        # 5. LLM Generation
+        # 5. Dynamic Gemini LLM Generation
         prompt_version = os.environ.get("PROMPT_VERSION", "v4")
         prompt_builder = get_prompt_builder(prompt_version)
         prompt = prompt_builder.build_prompt(user_query, all_evidence, decision_state, decision_reason, student_data)
@@ -220,14 +212,26 @@ class AdvisorService:
                     )
                     
                 except json.JSONDecodeError:
-                    print("[ERROR] Failed to parse JSON from LLM - using Offline Q&A Fallback")
-                    return OfflineQAService.get_fallback_response(user_query, all_evidence)
+                    print("[ERROR] Failed to parse JSON from LLM")
+                    return self._build_response(
+                        decision_state or "ANSWERED", 
+                        "The AI service is temporarily unavailable. Please try again.", 
+                        []
+                    )
                     
             except Exception as e:
-                print(f"[ERROR] LLM API Error: {type(e).__name__} - {str(e)} - using Offline Q&A Fallback")
-                return OfflineQAService.get_fallback_response(user_query, all_evidence)
+                print(f"[ERROR] LLM API Error: {type(e).__name__} - {str(e)}")
+                return self._build_response(
+                    decision_state or "ANSWERED", 
+                    "The AI service is temporarily unavailable. Please try again.", 
+                    []
+                )
         else:
-            return OfflineQAService.get_fallback_response(user_query, all_evidence)
+            return self._build_response(
+                decision_state or "ANSWERED", 
+                "The AI generation service API key is missing. Please configure GEMINI_API_KEY.", 
+                []
+            )
             
     def _build_response(self, state, answer, evidence, reason=None, missing_info=None, recommendation=None, uncertainty=None):
         return {

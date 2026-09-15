@@ -82,7 +82,7 @@ class AdvisorServiceTest(TestCase):
         with mock.patch('advisor.services.retrieval_service.RetrievalService.retrieve_evidence', return_value=[{'content': 'Test evidence'}]):
             service = AdvisorService()
             response = service.process_query("What is the attendance rule?")
-            self.assertTrue("attendance" in response['answer'].lower() or "offline" in response['answer'].lower())
+            self.assertIn("API key is missing", response['answer'])
 
     @mock.patch.dict(os.environ, {"GEMINI_API_KEY": "fake_key"})
     @mock.patch('google.genai.Client')
@@ -94,7 +94,7 @@ class AdvisorServiceTest(TestCase):
             service = AdvisorService()
             service.client = instance
             response = service.process_query("What is the attendance rule?")
-            self.assertTrue("attendance" in response['answer'].lower() or "offline" in response['answer'].lower())
+            self.assertIn("temporarily unavailable", response['answer'])
 
     @mock.patch.dict(os.environ, {"GEMINI_API_KEY": "fake_key"})
     @mock.patch('google.genai.Client')
@@ -108,7 +108,7 @@ class AdvisorServiceTest(TestCase):
             service = AdvisorService()
             service.client = instance
             response = service.process_query("What is the attendance rule?")
-            self.assertTrue("attendance" in response['answer'].lower() or "offline" in response['answer'].lower())
+            self.assertIn("temporarily unavailable", response['answer'])
 
     @mock.patch.dict(os.environ, {"GEMINI_API_KEY": "fake_key"})
     @mock.patch('google.genai.Client')
