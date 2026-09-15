@@ -22,12 +22,13 @@ staticfiles_dir = BASE_DIR / 'staticfiles'
 static_dir = BASE_DIR / 'static'
 
 if staticfiles_dir.exists():
-    application = WhiteNoise(application, root=str(staticfiles_dir), prefix='static/')
+    application = WhiteNoise(application, root=str(staticfiles_dir))
 else:
-    application = WhiteNoise(application, root=str(static_dir), prefix='static/')
+    application = WhiteNoise(application, root=str(static_dir))
 
 if static_dir.exists():
-    application.add_files(str(static_dir), prefix='static/')
+    application.add_files(str(static_dir))
+
 
 app = application
 
