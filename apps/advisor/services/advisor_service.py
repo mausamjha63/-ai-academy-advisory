@@ -21,20 +21,35 @@ class AdvisorService:
 
     def _classify_intent(self, query: str) -> str:
         clean_query = query.strip().lower()
+        
         # 1. Greeting
-        if clean_query in ["hi", "hello", "hey", "good morning", "good afternoon", "greetings"]:
+        if clean_query in ["hi", "hello", "hey", "good morning", "good afternoon", "greetings", "namaste", "pranam"]:
             return "GREETING"
             
-        # 2. Out of Scope (lightweight deterministic rules)
-        out_of_scope_keywords = ["how are you", "tell me a joke", "what is the weather", "weather", "write python", "python code", "elon musk", "who are you"]
-        for kw in out_of_scope_keywords:
-            if kw in clean_query:
-                return "OUT_OF_SCOPE"
-                
-        # 3. Prompt injection interception
+        # 2. Prompt injection interception
         injection_keywords = ["ignore", "forget", "reveal", "prompt", "you are an", "system instructions", "own knowledge", "unrestricted assistant"]
         for kw in injection_keywords:
             if kw in clean_query:
+                return "OUT_OF_SCOPE"
+
+        # 3. Explicit Out Of Scope Categories (Travel, Entertainment, Food, General Life, Sports, Shopping, etc.)
+        out_of_scope_keywords = [
+            # Travel & Places
+            "ghumne", "ghoomne", "travel", "vacation", "visit", "place to visit", "tourist", "destination", 
+            "trip", "hotel", "flight", "hill station", "beach", "jagah", "bohra", "sightseeing", "resort",
+            "city", "country", "tour", "safari", "hiking",
+            # Entertainment & Media
+            "movie", "film", "song", "gaana", "music", "actor", "actress", "series", "netflix", "youtube", "game", "playstation", "pubg",
+            # Food & Dining
+            "food", "recipe", "khana", "restaurant", "dish", "cook", "biryani", "pizza", "burger", "cafe",
+            # General Life & Off-Topic
+            "how are you", "tell me a joke", "joke", "shayari", "weather", "mausam", "sports", "cricket", 
+            "football", "ipl", "match", "politics", "modi", "news", "stock", "crypto", "write python", 
+            "python code", "elon musk", "who are you", "love", "relationship", "pyaar", "dost", "friend",
+            "girl", "boy", "date", "marriage"
+        ]
+        for kw in out_of_scope_keywords:
+            if re.search(rf'\b{re.escape(kw)}\b', clean_query) or kw in clean_query:
                 return "OUT_OF_SCOPE"
                 
         # 4. Needs clarification
@@ -54,9 +69,17 @@ class AdvisorService:
             )
             
         if intent == "OUT_OF_SCOPE":
+            hindi_indicators = ["kya", "batao", "batai", "ghumne", "ghoomne", "kaun", "hai", "mujhe", "ko", "se", "main", "kar", "dost", "pyaar", "jagah", "khana", "kahan", "kaise"]
+            has_hindi = any('\u0900' <= char <= '\u097f' for char in user_query) or any(re.search(rf'\b{kw}\b', user_query.lower()) for kw in hindi_indicators)
+            
+            if has_hindi:
+                ans = "Main AI Academic Advisor hoon. Main kewal university academic regulations, courses, prerequisites, attendance, aur eligibility se judey sawaalon ke jawab de sakta hoon. Kripya university academic topics se juda sawaal puchein."
+            else:
+                ans = "I’m the AI Academic Advisor. I can only assist with university academic questions such as academic regulations, course information, prerequisites, semester offerings, registration, progression, attendance, and eligibility. Please ask an academic question related to the university."
+                
             return self._build_response(
                 DecisionEngine.STATES['OUT_OF_SCOPE'],
-                "I’m the AI Academic Advisor. I can help with university academic questions such as academic regulations, course information, prerequisites, semester offerings, registration, progression, attendance, and eligibility. Please ask an academic question related to the university.",
+                ans,
                 []
             )
             
