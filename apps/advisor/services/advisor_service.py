@@ -178,49 +178,64 @@ class AdvisorService:
         prompt = prompt_builder.build_prompt(user_query, all_evidence, decision_state, decision_reason, student_data)
         
         if self.client:
-            try:
-                response = self.client.models.generate_content(
-                    model='gemini-3.6-flash',
-                    contents=prompt,
-                )
-                raw_answer = response.text
-                
-                # Extract JSON if it is wrapped in markdown blocks
-                json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', raw_answer, re.DOTALL)
-                if json_match:
-                    json_str = json_match.group(1)
-                else:
-                    json_str = raw_answer
+            models_to_try = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.6-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest']
+            raw_answer = None
+            last_error = None
+            
+            for m in models_to_try:
+                for attempt in range(2):
+                    try:
+                        response = self.client.models.generate_content(
+                            model=m,
+                            contents=prompt,
+                        )
+                        raw_answer = response.text
+                        if raw_answer:
+                            break
+                    except Exception as e:
+                        last_error = e
+                        print(f"[WARNING] Gemini model {m} (attempt {attempt+1}) failed: {type(e).__name__} - {str(e)[:100]}")
+                        import time
+                        time.sleep(0.5)
+                if raw_answer:
+                    break
 
-                try:
-                    parsed_response = json.loads(json_str)
+            if not raw_answer:
+                print(f"[ERROR] All Gemini models failed. Last error: {last_error}")
+                return self._build_response(
+                    decision_state or "ANSWERED", 
+                    "The AI service is temporarily unavailable. Please try again.", 
+                    []
+                )
+
+            # Extract JSON if it is wrapped in markdown blocks
+            json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', raw_answer, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(1)
+            else:
+                json_str = raw_answer
+
+            try:
+                parsed_response = json.loads(json_str)
+                
+                llm_state = parsed_response.get("state", "ANSWERED")
+                
+                # Decision Engine is absolutely authoritative.
+                if decision_state and llm_state != decision_state:
+                    llm_state = decision_state
                     
-                    llm_state = parsed_response.get("state", "ANSWERED")
-                    
-                    # Decision Engine is absolutely authoritative.
-                    if decision_state and llm_state != decision_state:
-                        llm_state = decision_state
-                        
-                    return self._build_response(
-                        state=llm_state,
-                        answer=parsed_response.get("answer", ""),
-                        reason=parsed_response.get("reason"),
-                        missing_info=parsed_response.get("missing_information", []),
-                        evidence=parsed_response.get("evidence", []),
-                        recommendation=parsed_response.get("recommendation"),
-                        uncertainty=parsed_response.get("uncertainty")
-                    )
-                    
-                except json.JSONDecodeError:
-                    print("[ERROR] Failed to parse JSON from LLM")
-                    return self._build_response(
-                        decision_state or "ANSWERED", 
-                        "The AI service is temporarily unavailable. Please try again.", 
-                        []
-                    )
-                    
-            except Exception as e:
-                print(f"[ERROR] LLM API Error: {type(e).__name__} - {str(e)}")
+                return self._build_response(
+                    state=llm_state,
+                    answer=parsed_response.get("answer", ""),
+                    reason=parsed_response.get("reason"),
+                    missing_info=parsed_response.get("missing_information", []),
+                    evidence=parsed_response.get("evidence", []),
+                    recommendation=parsed_response.get("recommendation"),
+                    uncertainty=parsed_response.get("uncertainty")
+                )
+                
+            except json.JSONDecodeError:
+                print("[ERROR] Failed to parse JSON from LLM")
                 return self._build_response(
                     decision_state or "ANSWERED", 
                     "The AI service is temporarily unavailable. Please try again.", 
