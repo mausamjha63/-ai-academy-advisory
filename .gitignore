@@ -63,4 +63,5 @@ cover/
 .DS_Store
 
 # AI Academic Advisor specific
+staticfiles/
 # allow scratch for evaluation scripts

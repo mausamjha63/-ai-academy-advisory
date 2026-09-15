@@ -57,6 +57,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -86,15 +87,29 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+import shutil
+
+IS_VERCEL = 'VERCEL' in os.environ or os.environ.get('VERCEL_ENV')
+
+if IS_VERCEL:
+    tmp_db = Path('/tmp/db.sqlite3')
+    orig_db = BASE_DIR / 'db.sqlite3'
+    if not tmp_db.exists() and orig_db.exists():
+        try:
+            shutil.copy2(orig_db, tmp_db)
+        except Exception:
+            pass
+    db_path = tmp_db if tmp_db.exists() else orig_db
+else:
+    db_path = BASE_DIR / 'db.sqlite3'
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': db_path,
     }
 }
+
 
 
 # Password validation
@@ -134,6 +149,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
