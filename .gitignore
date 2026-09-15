@@ -1,6 +1,7 @@
 # Environments
 .env
 venv/
+win_venv/
 env/
 ENV/
 env.bak/

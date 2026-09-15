@@ -6,50 +6,143 @@
 {% block header_subtitle %}Ask questions about policies, courses, and prerequisite eligibility.{% endblock %}
 
 {% block content %}
-<div class="chat-layout">
-    <!-- Main Chat Area -->
-    <div class="chat-main card">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.02);">
-            <div style="display: flex; align-items: center; gap: var(--space-2); color: var(--color-primary); font-size: 0.875rem; text-transform: uppercase;">
-                <svg style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path></svg>
-                <strong>Advisor Conversation</strong>
-            </div>
+<div class="chat-layout-wrapper">
+    <!-- Chat History Sidebar -->
+    <div class="chat-sidebar card">
+        <div class="sidebar-header" style="padding: var(--space-4); border-bottom: 1px solid var(--color-border);">
+            <a href="{% url 'new_chat' %}{% if active_student %}?student_id={{ active_student.student_id }}{% endif %}" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                <span>New Chat</span>
+            </a>
         </div>
         
-        <div id="chatHistory" class="chat-messages">
-            <!-- Initial Greeting -->
-            <div class="message msg-bot">
-                <p style="font-weight: 500;">Hello! I am the AI Academic Advisor.</p>
-                <p style="font-size: 0.875rem; color: var(--color-text-muted); margin-top: var(--space-2);">Ask me questions about courses, prerequisites, rules, or select a Demo student profile from the top right to ask personalized eligibility questions.</p>
+        <div class="session-list" style="flex-grow: 1; overflow-y: auto; padding: var(--space-3);">
+            <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; margin: var(--space-2) var(--space-2) var(--space-3);">
+                Recent Chats
             </div>
-        </div>
-        
-        <div style="padding: var(--space-4); border-top: 1px solid var(--color-border); background: var(--color-surface);">
-            <form id="chatForm" class="chat-input-area">
-                {% csrf_token %}
-                <input type="text" id="queryInput" placeholder="Ask an academic question..." required>
-                <button type="submit" id="sendBtn" class="btn btn-primary" style="min-width: 100px;">
-                    <span id="sendText">Send</span>
-                    <svg id="loadingSpinner" style="width: 20px; height: 20px; display: none; animation: spin 1s linear infinite;" fill="none" viewBox="0 0 24 24"><circle style="opacity: 0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path style="opacity: 0.75;" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                </button>
-            </form>
+            
+            {% for s in recent_sessions %}
+                <div class="session-item {% if s.id == active_session.id %}active-session{% endif %}" style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem var(--space-3); border-radius: var(--radius-md); margin-bottom: 0.35rem; cursor: pointer; transition: background 0.15s; text-decoration: none; color: var(--color-text-main);">
+                    <a href="{% url 'advisor_chat' %}?session_id={{ s.id }}{% if active_student %}&student_id={{ active_student.student_id }}{% endif %}" style="display: flex; align-items: center; gap: 0.6rem; overflow: hidden; text-decoration: none; color: inherit; flex-grow: 1;">
+                        <svg style="width: 16px; height: 16px; flex-shrink: 0; color: var(--color-text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                        <span style="font-size: 0.875rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ s.title }}</span>
+                    </a>
+                    <a href="{% url 'delete_chat' session_id=s.id %}{% if active_student %}?student_id={{ active_student.student_id }}{% endif %}" onclick="return confirm('Delete this conversation history?');" style="color: var(--color-text-muted); padding: 2px 4px; border-radius: 4px; opacity: 0.6; transition: opacity 0.2s;" title="Delete Chat">
+                        <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </a>
+                </div>
+            {% empty %}
+                <div style="font-size: 0.8rem; color: var(--color-text-muted); padding: var(--space-3); text-align: center;">No saved conversations.</div>
+            {% endfor %}
         </div>
     </div>
-    
-    <!-- Evidence / Metadata Panel -->
-    <div class="chat-side card">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.02);">
-            <div style="display: flex; align-items: center; gap: var(--space-2); color: var(--color-text-muted); font-size: 0.875rem; text-transform: uppercase;">
-                <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                <strong>Evidence & Sources</strong>
+
+    <!-- Main Chat Layout -->
+    <div class="chat-layout">
+        <!-- Main Chat Area -->
+        <div class="chat-main card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.02);">
+                <div style="display: flex; align-items: center; gap: var(--space-2); color: var(--color-primary); font-size: 0.875rem;">
+                    <svg style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path></svg>
+                    <strong id="sessionTitleDisplay">{{ active_session.title }}</strong>
+                </div>
+                <span style="font-size: 0.75rem; color: var(--color-text-muted);">Session ID: {{ active_session.id|stringformat:".8s" }}</span>
             </div>
-            <span id="stateIndicator" class="badge badge-neutral">WAITING</span>
+            
+            <div id="chatHistory" class="chat-messages">
+                {% if not messages %}
+                    <!-- Initial Greeting for New Chat -->
+                    <div class="message msg-bot">
+                        <p style="font-weight: 500;">Hello! I am the AI Academic Advisor.</p>
+                        <p style="font-size: 0.875rem; color: var(--color-text-muted); margin-top: var(--space-2);">Ask me questions about courses, prerequisites, rules, or select a Demo student profile from the top right to ask personalized eligibility questions.</p>
+                    </div>
+                {% endif %}
+
+                {% for msg in messages %}
+                    {% if msg.sender == 'USER' %}
+                        <div class="message msg-user">
+                            <p>{{ msg.content }}</p>
+                        </div>
+                    {% else %}
+                        <div class="message msg-bot" data-evidence='{{ msg.evidence|json_script:"ev" }}'>
+                            {% if msg.state %}
+                                <span class="state-badge 
+                                    {% if msg.state == 'ELIGIBLE' %}badge-success
+                                    {% elif msg.state == 'NOT_ELIGIBLE' %}badge-danger
+                                    {% elif msg.state == 'NEEDS_MORE_INFORMATION' or msg.state == 'CONFLICTING_INFORMATION' %}badge-warning
+                                    {% else %}badge-neutral{% endif %}"
+                                    style="{% if msg.state == 'ELIGIBLE' %}background: #d1fae5; color: #065f46; border-color: #34d399;
+                                           {% elif msg.state == 'NOT_ELIGIBLE' %}background: #fee2e2; color: #991b1b; border-color: #f87171;
+                                           {% elif msg.state == 'NEEDS_MORE_INFORMATION' %}background: #fef3c7; color: #92400e; border-color: #fbbf24;
+                                           {% elif msg.state == 'CONFLICTING_INFORMATION' %}background: #ffedd5; color: #9a3412; border-color: #fdba74;
+                                           {% else %}background: #f1f5f9; color: #334155; border-color: #cbd5e1;{% endif %}">
+                                    {{ msg.state }}
+                                </span>
+                            {% endif %}
+                            
+                            <div style="margin-top: 0.5rem; line-height: 1.5; font-size: 0.95rem; white-space: pre-wrap;">{{ msg.content }}</div>
+
+                            {% if msg.reason %}
+                                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--color-border);">
+                                    <span style="font-size: 0.7rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase;">Reasoning</span>
+                                    <div style="font-size: 0.875rem; color: var(--color-text-muted); margin-top: 0.25rem;">{{ msg.reason }}</div>
+                                </div>
+                            {% endif %}
+
+                            {% if msg.missing_information %}
+                                <div style="margin-top: 0.75rem; background: #fffbeb; border: 1px solid #fde68a; padding: 0.75rem; border-radius: var(--radius-md);">
+                                    <span style="font-size: 0.7rem; font-weight: 700; color: #b45309; text-transform: uppercase;">Missing Information</span>
+                                    <ul style="font-size: 0.875rem; color: #92400e; margin-left: 1rem; margin-top: 0.25rem;">
+                                        {% for item in msg.missing_information %}
+                                            <li>{{ item }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+
+                            {% if msg.recommendation %}
+                                <div style="margin-top: 0.75rem; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.75rem; border-radius: var(--radius-md);">
+                                    <span style="font-size: 0.7rem; font-weight: 700; color: #047857; text-transform: uppercase;">Recommendation</span>
+                                    <div style="font-size: 0.875rem; color: #065f46; margin-top: 0.25rem;">{{ msg.recommendation }}</div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            
+            <div style="padding: var(--space-4); border-top: 1px solid var(--color-border); background: var(--color-surface);">
+                <form id="chatForm" class="chat-input-area">
+                    {% csrf_token %}
+                    <input type="hidden" id="active_session_id" name="session_id" value="{{ active_session.id }}">
+                    <input type="text" id="queryInput" placeholder="Ask an academic question..." required>
+                    <button type="submit" id="sendBtn" class="btn btn-primary" style="min-width: 100px;">
+                        <span id="sendText">Send</span>
+                        <svg id="loadingSpinner" style="width: 20px; height: 20px; display: none; animation: spin 1s linear infinite;" fill="none" viewBox="0 0 24 24"><circle style="opacity: 0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path style="opacity: 0.75;" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    </button>
+                </form>
+            </div>
         </div>
         
-        <div id="evidencePanel" class="evidence-panel" style="padding: var(--space-4); background: var(--color-bg);">
-            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; opacity: 0.6;">
-                <svg style="width: 48px; height: 48px; color: var(--color-border); margin-bottom: var(--space-3);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                <p style="font-size: 0.875rem; text-align: center;">Ask a question to see retrieved official sources and decision metadata.</p>
+        <!-- Evidence / Metadata Panel -->
+        <div class="chat-side card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.02);">
+                <div style="display: flex; align-items: center; gap: var(--space-2); color: var(--color-text-muted); font-size: 0.875rem; text-transform: uppercase;">
+                    <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <strong>Evidence & Sources</strong>
+                </div>
+                <span id="stateIndicator" class="badge badge-neutral">
+                    {% with messages|last as last_msg %}
+                        {% if last_msg and last_msg.state %}{{ last_msg.state }}{% else %}READY{% endif %}
+                    {% endwith %}
+                </span>
+            </div>
+            
+            <div id="evidencePanel" class="evidence-panel" style="padding: var(--space-4); background: var(--color-bg);">
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; opacity: 0.6;">
+                    <svg style="width: 48px; height: 48px; color: var(--color-border); margin-bottom: var(--space-3);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <p style="font-size: 0.875rem; text-align: center;">Ask a question to see retrieved official sources and decision metadata.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -61,6 +154,33 @@
 @keyframes spin {
     100% { transform: rotate(360deg); }
 }
+.chat-layout-wrapper {
+    display: flex;
+    gap: var(--space-4);
+    height: 650px;
+}
+.chat-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+}
+.session-item:hover {
+    background: rgba(0,0,0,0.04);
+}
+.active-session {
+    background: #e0e7ff !important;
+    border-left: 3px solid var(--color-primary);
+    color: var(--color-primary) !important;
+}
+.chat-layout {
+    flex-grow: 1;
+    display: flex;
+    gap: var(--space-4);
+    height: 100%;
+}
+.chat-main { flex: 2; display: flex; flex-direction: column; }
+.chat-side { flex: 1; display: flex; flex-direction: column; }
 .truncate-3-lines {
     display: -webkit-box;
     -webkit-line-clamp: 4;
@@ -75,14 +195,60 @@
 
 {% block extra_js %}
 <script>
+    const chatHistory = document.getElementById('chatHistory');
+    const evidencePanel = document.getElementById('evidencePanel');
+
+    // Auto scroll chat to bottom
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+
+    // Load Evidence on page load from last bot message if available
+    {% with messages|last as last_msg %}
+        {% if last_msg and last_msg.sender == 'BOT' and last_msg.evidence %}
+            const initialEvidence = {{ last_msg.evidence|safe }};
+            renderEvidence(initialEvidence);
+        {% endif %}
+    {% endwith %}
+
+    function renderEvidence(evidenceList) {
+        evidencePanel.innerHTML = '';
+        if (evidenceList && evidenceList.length > 0) {
+            evidenceList.forEach((ev, i) => {
+                if (typeof ev === 'string') {
+                    evidencePanel.innerHTML += `
+                        <div class="evidence-item">
+                            <h4 style="display: flex; align-items: center; gap: 0.5rem;"><span style="background: var(--color-border); width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.6rem;">${i+1}</span> Source Content</h4>
+                            <p>${ev}</p>
+                        </div>
+                    `;
+                } else {
+                    const srcTitle = ev.source || ev.source_file || ev.source_document || ev.filename || ev.title || 'Institutional Source';
+                    const srcContent = ev.content || ev.text || ev.snippet || JSON.stringify(ev);
+                    const srcPage = ev.page || ev.page_number || '';
+                    evidencePanel.innerHTML += `
+                        <div class="evidence-item">
+                            <h4 style="display: flex; align-items: center; gap: 0.5rem;"><span style="background: var(--color-border); width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.6rem;">${i+1}</span> <span style="background: var(--color-primary); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">${srcTitle}</span></h4>
+                            ${srcPage ? `<p style="font-weight: 600; color: var(--color-text-main); margin-top: 0.5rem; font-size: 0.8rem;">Location / Page: ${srcPage}</p>` : ''}
+                            <p class="truncate-3-lines" style="font-size: 0.85rem; margin-top: 0.25rem;">${srcContent}</p>
+                        </div>
+                    `;
+                }
+            });
+        } else {
+            evidencePanel.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; opacity: 0.6;">
+                    <svg style="width: 48px; height: 48px; color: var(--color-border); margin-bottom: var(--space-3);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <p style="font-size: 0.875rem; text-align: center;">No specific institutional sources were retrieved for this query.</p>
+                </div>`;
+        }
+    }
+
     document.getElementById('chatForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const input = document.getElementById('queryInput');
         const query = input.value;
-        const studentId = document.getElementById('student_id').value; 
-        const chatHistory = document.getElementById('chatHistory');
-        const evidencePanel = document.getElementById('evidencePanel');
+        const studentId = document.getElementById('student_id') ? document.getElementById('student_id').value : ''; 
+        const sessionId = document.getElementById('active_session_id').value;
         const stateIndicator = document.getElementById('stateIndicator');
         const sendBtn = document.getElementById('sendBtn');
         const sendText = document.getElementById('sendText');
@@ -90,7 +256,7 @@
         
         if (!query.trim()) return;
         
-        // Add User Message
+        // Add User Message UI
         chatHistory.innerHTML += `
             <div class="message msg-user">
                 <p>${query}</p>
@@ -112,6 +278,7 @@
             const formData = new FormData();
             formData.append('query', query);
             if (studentId) formData.append('student_id', studentId);
+            if (sessionId) formData.append('session_id', sessionId);
             
             const response = await fetch('/advisor/chat/', {
                 method: 'POST',
@@ -123,7 +290,11 @@
             
             const data = await response.json();
             
-            // Render State
+            if (data.session_title) {
+                document.getElementById('sessionTitleDisplay').textContent = data.session_title;
+            }
+
+            // Render State Badge
             let badgeClass = "badge badge-neutral";
             let stateStyle = "";
             if (data.state === 'ELIGIBLE') { badgeClass = 'badge badge-success'; stateStyle = "background: #d1fae5; color: #065f46; border-color: #34d399;"; }
@@ -162,7 +333,7 @@
                     </div>`;
             }
             
-            // Render Answer
+            // Render Answer Message
             chatHistory.innerHTML += `
                 <div class="message msg-bot">
                     <span class="state-badge" style="${stateStyle}">${data.state}</span>
@@ -171,34 +342,8 @@
             `;
             chatHistory.scrollTop = chatHistory.scrollHeight;
             
-            // Render Evidence
-            evidencePanel.innerHTML = '';
-            if (data.evidence && data.evidence.length > 0) {
-                data.evidence.forEach((ev, i) => {
-                    if (typeof ev === 'string') {
-                        evidencePanel.innerHTML += `
-                            <div class="evidence-item">
-                                <h4 style="display: flex; align-items: center; gap: 0.5rem;"><span style="background: var(--color-border); width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.6rem;">${i+1}</span> Source Content</h4>
-                                <p>${ev}</p>
-                            </div>
-                        `;
-                    } else {
-                        evidencePanel.innerHTML += `
-                            <div class="evidence-item">
-                                <h4 style="display: flex; align-items: center; gap: 0.5rem;"><span style="background: var(--color-border); width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.6rem;">${i+1}</span> <span style="background: var(--color-primary-light); color: white; padding: 2px 6px; border-radius: 4px;">${ev.source}</span></h4>
-                                ${ev.page ? `<p style="font-weight: 600; color: var(--color-text-main); margin-top: 0.5rem;">Location: ${ev.page}</p>` : ''}
-                                <p class="truncate-3-lines">${ev.content}</p>
-                            </div>
-                        `;
-                    }
-                });
-            } else {
-                evidencePanel.innerHTML = `
-                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; opacity: 0.6;">
-                        <svg style="width: 48px; height: 48px; color: var(--color-border); margin-bottom: var(--space-3);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        <p style="font-size: 0.875rem; text-align: center;">No specific institutional sources were retrieved for this query.</p>
-                    </div>`;
-            }
+            // Render Evidence Panel
+            renderEvidence(data.evidence);
             
         } catch (error) {
             console.error(error);
@@ -231,18 +376,5 @@
         }
         return cookieValue;
     }
-    
-    // Auto-submit if 'q' is in URL
-    document.addEventListener('DOMContentLoaded', () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const q = urlParams.get('q');
-        if (q) {
-            document.getElementById('queryInput').value = q;
-            document.getElementById('sendBtn').click();
-            // Clean up the URL to prevent resubmission on refresh
-            const newUrl = window.location.pathname + (urlParams.get('student_id') ? '?student_id=' + urlParams.get('student_id') : '');
-            window.history.replaceState({}, document.title, newUrl);
-        }
-    });
 </script>
 {% endblock %}
