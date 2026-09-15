@@ -31,9 +31,11 @@ sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-vyjp^(i!2txejr*+m4k^(bpkk*r61pasu3-+d7)q45p)@atipa')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'True') == 'True'
+IS_VERCEL = 'VERCEL' in os.environ or os.environ.get('VERCEL_ENV')
+DEBUG = False if IS_VERCEL else (os.getenv('DEBUG', 'True') == 'True')
 
 ALLOWED_HOSTS = ['*']
+
 
 
 # Application definition
@@ -151,6 +153,8 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 WHITENOISE_USE_FINDERS = True
+WHITENOISE_MANIFEST_STRICT = False
+
 
 
 # Default primary key field type
